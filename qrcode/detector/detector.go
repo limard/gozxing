@@ -1,6 +1,7 @@
 package detector
 
 import (
+	"image"
 	"math"
 
 	"github.com/makiuchi-d/gozxing"
@@ -337,4 +338,44 @@ func (this *Detector) findAlignmentInRegion(overallEstModuleSize float64, estAli
 		overallEstModuleSize,
 		this.resultPointCallback)
 	return alignmentFinder.Find()
+}
+
+// DetectArea returns the rectangular range of barcode
+func (this *Detector) DetectArea(hints map[gozxing.DecodeHintType]interface{}) (rect image.Rectangle, e error) {
+	if hints != nil {
+		if cb, ok := hints[gozxing.DecodeHintType_NEED_RESULT_POINT_CALLBACK]; ok {
+			this.resultPointCallback, _ = cb.(gozxing.ResultPointCallback)
+		}
+	}
+
+	finder := NewFinderPatternFinder(this.image, this.resultPointCallback)
+	info, e1 := finder.Find(hints)
+	if e1 != nil {
+		e = e1
+		return
+	}
+
+	topLeft := info.GetTopLeft()
+	topRight := info.GetTopRight()
+	bottomLeft := info.GetBottomLeft()
+
+	// Pixel size of each square
+	moduleSize := this.calculateModuleSize(topLeft, topRight, bottomLeft)
+	if moduleSize < 1.0 {
+		e = gozxing.NewNotFoundException("moduleSize = %v", moduleSize)
+		return
+	}
+
+	min := func(a, b int) int {
+		if a > b {
+			return b
+		}
+		return a
+	}
+
+	rect.Min.X = min(int(topLeft.GetX()-3.5*moduleSize), int(bottomLeft.GetX()-3.5*moduleSize))
+	rect.Min.Y = min(int(topLeft.GetY()-3.5*moduleSize), int(topRight.GetY()-3.5*moduleSize))
+	rect.Max.X = int(topRight.GetX() + 3.5*moduleSize)
+	rect.Max.Y = int(bottomLeft.GetY() + 3.5*moduleSize)
+	return
 }

@@ -5,9 +5,8 @@ import (
 
 	"github.com/makiuchi-d/gozxing"
 	"github.com/makiuchi-d/gozxing/multi"
-	"github.com/makiuchi-d/gozxing/multi/qrcode/detector"
-	"github.com/makiuchi-d/gozxing/qrcode"
 	"github.com/makiuchi-d/gozxing/qrcode/decoder"
+	"github.com/makiuchi-d/gozxing/qrcode/detector"
 )
 
 // This implementation can detect and decode multiple QR Codes in an image.
@@ -17,12 +16,12 @@ var (
 )
 
 type QRCodeMultiReader struct {
-	*qrcode.QRCodeReader
+	*QRCodeReader
 }
 
 func NewQRCodeMultiReader() multi.MultipleBarcodeReader {
 	return &QRCodeMultiReader{
-		qrcode.NewQRCodeReader().(*qrcode.QRCodeReader),
+		NewQRCodeReader().(*QRCodeReader),
 	}
 }
 
